@@ -1,5 +1,5 @@
 // Package array contains immutable sorted array implementation.
-// This data structure is useful when you many read operations and much less writes.
+// This data structure is useful when you do many read operations and much less writes.
 // See https://en.wikipedia.org/wiki/Sorted_array
 package array
 
