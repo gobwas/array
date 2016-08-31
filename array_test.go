@@ -43,41 +43,79 @@ func initArray(n int) (ret Array, items []Item, dup map[int]bool) {
 	return Array{items}, items, dup
 }
 
+func insertGen(n, k int) func() (Array, []Item) {
+	return func() (ret Array, items []Item) {
+		ret, _, dup := initArray(n)
+		items = getArrayItems(k, dup)
+		return
+	}
+}
+
+func deleteGen(n, k int) func() (Array, []Item) {
+	return func() (ret Array, remove []Item) {
+		ret, items, _ := initArray(n)
+		remove = make([]Item, k)
+		for i, v := range rand.Perm(n) {
+			remove[i] = items[v]
+			if i+1 == k {
+				break
+			}
+		}
+		return
+	}
+}
+
 func benchmarkArrayInsert(b *testing.B, n int) {
-	arr, _, dup := initArray(n)
-	insert := getArrayItems(b.N, dup)
+	ops := 10
+	gen := insertGen(n, ops)
 	var prev Item
+	var arr Array
+	var insert []Item
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		arr, prev = arr.Upsert(insert[i])
+		next := i % ops
+		if next == 0 {
+			b.StopTimer()
+			arr, insert = gen()
+			b.StartTimer()
+		}
+		arr, prev = arr.Upsert(insert[next])
 		if prev != nil {
-			b.Fatalf("could not insert new item %v: already exists", insert[i])
+			b.Fatalf("could not insert new item %v: already exists", insert[next])
 		}
 	}
 }
 
 func benchmarkArrayDelete(b *testing.B, n int) {
-	arr, items, _ := initArray(b.N + n)
-	remove := rand.Perm(b.N + n)
+	ops := 10
+	gen := deleteGen(n, ops)
 	var prev Item
+	var arr Array
+	var remove []Item
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		arr, prev = arr.Delete(items[remove[i]])
+		next := i % ops
+		if next == 0 {
+			b.StopTimer()
+			arr, remove = gen()
+			b.StartTimer()
+		}
+		arr, prev = arr.Delete(remove[next])
 		if prev == nil {
-			b.Fatalf("could not remove item %v: not exists", items[remove[i]])
+			b.Fatalf("could not remove item %v: not exists", remove[next])
 		}
 	}
 }
 
 func benchmarkArrayHas(b *testing.B, n int) {
-	arr, items, _ := initArray(b.N + n)
-	check := rand.Perm(b.N + n)
+	arr, items, _ := initArray(n)
+	check := rand.Perm(n)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if !arr.Has(items[check[i]]) {
+		if !arr.Has(items[check[i%n]]) {
 			b.Fatalf("@_O arr has no such item")
 		}
 	}
@@ -99,13 +137,13 @@ func BenchmarkArrayInsert_0(b *testing.B)      { benchmarkArrayInsert(b, 0) }
 func BenchmarkArrayInsert_1000(b *testing.B)   { benchmarkArrayInsert(b, 1000) }
 func BenchmarkArrayInsert_100000(b *testing.B) { benchmarkArrayInsert(b, 100000) }
 
-func BenchmarkArrayDelete_0(b *testing.B)      { benchmarkArrayDelete(b, 0) }
 func BenchmarkArrayDelete_1000(b *testing.B)   { benchmarkArrayDelete(b, 1000) }
 func BenchmarkArrayDelete_100000(b *testing.B) { benchmarkArrayDelete(b, 100000) }
 
-func BenchmarkArrayHas_0(b *testing.B)      { benchmarkArrayHas(b, 0) }
-func BenchmarkArrayHas_1000(b *testing.B)   { benchmarkArrayHas(b, 1000) }
-func BenchmarkArrayHas_100000(b *testing.B) { benchmarkArrayHas(b, 100000) }
+func BenchmarkArrayHas_1000(b *testing.B)    { benchmarkArrayHas(b, 1000) }
+func BenchmarkArrayHas_100000(b *testing.B)  { benchmarkArrayHas(b, 100000) }
+func BenchmarkArrayHas_1000000(b *testing.B) { benchmarkArrayHas(b, 1000000) }
 
-func BenchmarkArrayHasMiss_1000(b *testing.B)   { benchmarkArrayHasMiss(b, 1000) }
-func BenchmarkArrayHasMiss_100000(b *testing.B) { benchmarkArrayHasMiss(b, 100000) }
+func BenchmarkArrayHasMiss_1000(b *testing.B)    { benchmarkArrayHasMiss(b, 1000) }
+func BenchmarkArrayHasMiss_100000(b *testing.B)  { benchmarkArrayHasMiss(b, 100000) }
+func BenchmarkArrayHasMiss_1000000(b *testing.B) { benchmarkArrayHasMiss(b, 1000000) }
