@@ -7,11 +7,6 @@ import (
 	"sort"
 )
 
-// Immutable sorted array.
-type Array struct {
-	data []Item
-}
-
 // Item represents single element in array.
 type Item interface {
 	// Less tests whether the current item is less than the given argument.
@@ -21,12 +16,9 @@ type Item interface {
 	Less(than Item) bool
 }
 
-// Int implements Item interface for ints.
-type Int int
-
-// Less tests that a is less than b.
-func (a Int) Less(b Item) bool {
-	return a < b.(Int)
+// Immutable sorted array.
+type Array struct {
+	data []Item
 }
 
 // Has checks whether array contains x.
@@ -42,6 +34,17 @@ func (a Array) Get(x Item) Item {
 		return nil
 	}
 	return a.data[i]
+}
+
+// At returns item at i-th index in the underlying data.
+func (a Array) At(i int) Item {
+	return a.data[i]
+}
+
+// Data returs underlying data.
+// It is useful only for iterating items directly.
+func (a Array) Data() []Item {
+	return a.data
 }
 
 // Upsert inserts x into new copy of Array if it not exists yet.
@@ -106,4 +109,12 @@ func (a Array) search(x Item) (ok bool, i int) {
 	f := a.data[i]
 	ok = !f.Less(x) && !x.Less(f)
 	return
+}
+
+// Int implements Item interface for ints.
+type Int int
+
+// Less tests that a is less than b.
+func (a Int) Less(b Item) bool {
+	return a < b.(Int)
 }
