@@ -91,6 +91,16 @@ func (a Array) Ascend(cb func(x Item) bool) {
 	}
 }
 
+// AscendRange calls the cb for every array's item that at least x and at most y.
+// If cb returns false loop is over.
+func (a Array) AscendRange(x, y Item, cb func(x Item) bool) {
+	for i, j := a.index(x), a.index(y); i < len(a.data) && i <= j; i++ {
+		if !cb(a.data[i]) {
+			return
+		}
+	}
+}
+
 // Len returns length of the underlying data.
 func (a Array) Len() int {
 	return len(a.data)
@@ -100,14 +110,21 @@ func (a Array) Len() int {
 // It returns true if it found exact same element.
 // It also returns index in l.data, where x could lay.
 func (a Array) search(x Item) (ok bool, i int) {
-	i = sort.Search(len(a.data), func(j int) bool {
-		return !a.data[j].Less(x)
-	})
+	i = a.index(x)
 	if i == len(a.data) {
 		return
 	}
 	f := a.data[i]
 	ok = !f.Less(x) && !x.Less(f)
+	return
+}
+
+// index searches x in Array's data using binary search.
+// It returns index in l.data, where x could lay.
+func (a Array) index(x Item) (i int) {
+	i = sort.Search(len(a.data), func(j int) bool {
+		return !a.data[j].Less(x)
+	})
 	return
 }
 

@@ -2,9 +2,39 @@ package array
 
 import (
 	"math/rand"
+	"reflect"
 	"sort"
 	"testing"
 )
+
+func TestAscendRange(t *testing.T) {
+	for i, test := range []struct {
+		items []Item
+		x, y  Item
+		exp   []Item
+	}{
+		{
+			[]Item{Int(0), Int(1), Int(2), Int(3), Int(4), Int(5)},
+			Int(3), Int(5),
+			[]Item{Int(3), Int(4), Int(5)},
+		},
+		{
+			[]Item{Int(0), Int(1), Int(2), Int(3), Int(4), Int(5)},
+			Int(3), Int(3),
+			[]Item{Int(3)},
+		},
+	} {
+		a := Array{test.items}
+		var data []Item
+		a.AscendRange(test.x, test.y, func(x Item) bool {
+			data = append(data, x)
+			return true
+		})
+		if !reflect.DeepEqual(data, test.exp) {
+			t.Errorf("[%d] AscendRange not equal: got %v; want %v\n", i, data, test.exp)
+		}
+	}
+}
 
 // getUniq returns int that not present in dup.
 func getUniq(dup map[int]bool) int {
