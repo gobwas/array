@@ -118,3 +118,11 @@ type Int int
 func (a Int) Less(b Item) bool {
 	return a < b.(Int)
 }
+
+// Uint implements Item interface for uints.
+type Uint uint
+
+// Less tests that a is less than b.
+func (a Uint) Less(b Item) bool {
+	return a < b.(Uint)
+}
