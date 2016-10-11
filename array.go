@@ -56,7 +56,7 @@ func (a Array) Upsert(x Item) (cp Array, prev Item) {
 	if has {
 		with = make([]Item, len(a.data))
 		copy(with, a.data)
-		a.data[n], prev = x, a.data[n]
+		with[n], prev = x, a.data[n]
 	} else {
 		with = make([]Item, len(a.data)+1)
 		copy(with[:n], a.data[:n])
